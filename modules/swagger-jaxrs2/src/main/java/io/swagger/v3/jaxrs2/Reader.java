@@ -52,6 +52,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Application;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -249,6 +250,12 @@ public class Reader implements OpenApiReader {
         final javax.ws.rs.Path apiPath = ReflectionUtils.getAnnotation(cls, javax.ws.rs.Path.class);
 
         if (hidden != null) { //  || (apiPath == null && !isSubresource)) {
+            return openAPI;
+        }
+
+        boolean isAbstract = Modifier.isAbstract(cls.getModifiers());
+        boolean isInterface = cls.isInterface();
+        if (isInterface || isAbstract) {
             return openAPI;
         }
 
