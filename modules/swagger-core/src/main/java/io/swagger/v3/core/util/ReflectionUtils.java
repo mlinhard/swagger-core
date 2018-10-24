@@ -107,6 +107,32 @@ public class ReflectionUtils {
         }
         return result;
     }
+    
+    public static List<Method> getOverriddenMethods(Method method) {
+        Set<Method> methodSet = new HashSet<>();
+        Class<?> declaringClass = method.getDeclaringClass();
+        addMethodsFromInterfaces(method, declaringClass, methodSet);
+        Class<?> superClass = declaringClass.getSuperclass();
+        while (superClass != null && !(superClass.equals(Object.class))) {
+            Method overridenMethod = findMethod(method, superClass);
+            if (overridenMethod != null) {
+                methodSet.add(overridenMethod);
+            }
+            addMethodsFromInterfaces(method, superClass, methodSet);
+            superClass = superClass.getSuperclass();
+        }
+
+        return new ArrayList<>(methodSet);
+    }
+
+    private static void addMethodsFromInterfaces(Method method, Class<?> clazz, Set<Method> methodSet) {
+        for (Class<?> anInterface : clazz.getInterfaces()) {
+            Method overridenMethod = findMethod(method, anInterface);
+            if (overridenMethod != null) {
+                methodSet.add(overridenMethod);
+            }
+        }
+    }
 
     /**
      * Searches the method methodToFind in given class cls. If the method is found returns it, else return null.
@@ -321,20 +347,25 @@ public class ReflectionUtils {
 
     public static Annotation[][] getParameterAnnotations(Method method) {
         Annotation[][] methodAnnotations = method.getParameterAnnotations();
-        Method overriddenmethod = getOverriddenMethod(method);
+        List<List<Type>> methodAnnotationTypes = new ArrayList<>();
+        for (int i = 0; i < methodAnnotations.length; i++) {
+            List<Type> types = new ArrayList<>();
+            for (int j = 0; j < methodAnnotations[i].length; j++) {
+                types.add(methodAnnotations[i][j].annotationType());
+            }
+            methodAnnotationTypes.add(types);
+        }
 
-        if (overriddenmethod != null) {
+        for (Method overriddenmethod : getOverriddenMethods(method)) {
             Annotation[][] overriddenAnnotations = overriddenmethod
                     .getParameterAnnotations();
 
             for (int i = 0; i < methodAnnotations.length; i++) {
-                List<Type> types = new ArrayList<>();
-                for (int j = 0; j < methodAnnotations[i].length; j++) {
-                    types.add(methodAnnotations[i][j].annotationType());
-                }
+                List<Type> types = methodAnnotationTypes.get(i);
                 for (int j = 0; j < overriddenAnnotations[i].length; j++) {
                     if (!types.contains(overriddenAnnotations[i][j]
                             .annotationType())) {
+                        types.add(overriddenAnnotations[i][j].annotationType());
                         methodAnnotations[i] = ArrayUtils.add(
                                 methodAnnotations[i],
                                 overriddenAnnotations[i][j]);

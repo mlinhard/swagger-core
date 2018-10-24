@@ -4,6 +4,12 @@ import io.swagger.v3.core.util.ReflectionUtils;
 import io.swagger.v3.core.util.reflection.resources.Child;
 import io.swagger.v3.core.util.reflection.resources.IParent;
 import io.swagger.v3.core.util.reflection.resources.Parent;
+import io.swagger.v3.core.util.reflection.resources2.AnnotationA;
+import io.swagger.v3.core.util.reflection.resources2.AnnotationB;
+import io.swagger.v3.core.util.reflection.resources2.ClassA;
+import io.swagger.v3.core.util.reflection.resources2.ClassB;
+import io.swagger.v3.core.util.reflection.resources2.ClassC;
+import io.swagger.v3.core.util.reflection.resources2.IFaceD;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -11,14 +17,42 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import javax.ws.rs.Path;
+
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
 import static org.testng.Assert.assertNull;
 
 public class ReflectionUtilsTest {
+
+    @Test
+    public void inheritedParameterAnnotation() throws Exception {
+        Method dostuff = ClassA.class.getMethod("dostuff", Integer.class, Integer.class);
+        Annotation[][] annotations = ReflectionUtils.getParameterAnnotations(dostuff);
+        Assert.assertEquals(annotations[0].length, 1);
+        Assert.assertEquals(annotations[1].length, 1);
+        Assert.assertEquals(annotations[0][0].annotationType(), AnnotationB.class);
+        Assert.assertEquals(annotations[1][0].annotationType(), AnnotationA.class);
+        System.out.println(annotations);
+    }
+    
+    @Test
+    public void inheritedMethods() throws Exception {
+        Method dostuffA = ClassA.class.getMethod("dostuff", Integer.class, Integer.class);
+        Method dostuffB = ClassB.class.getMethod("dostuff", Integer.class, Integer.class);
+        Method dostuffC = ClassC.class.getMethod("dostuff", Integer.class, Integer.class);
+        Method dostuffD = IFaceD.class.getMethod("dostuff", Integer.class, Integer.class);
+        List<Method> methods = ReflectionUtils.getOverriddenMethods(dostuffA);
+        
+        Assert.assertTrue(methods.contains(dostuffB));
+        Assert.assertTrue(methods.contains(dostuffC));
+        Assert.assertTrue(methods.contains(dostuffD));
+        Assert.assertEquals(methods.size(), 3);
+    }
 
     @Test
     public void typeFromStringTest() {
