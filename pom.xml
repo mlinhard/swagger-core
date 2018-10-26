@@ -488,6 +488,13 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
+    <distributionManagement>
+        <repository>
+            <id>dnastack-releases</id>
+            <layout>default</layout>
+            <url>https://nexus.dnastack.com/content/repositories/releases</url>
+        </repository>
+    </distributionManagement>
     <properties>
         <joda-version>1.9.2</joda-version>
         <joda-time-version>2.9.9</joda-time-version>
